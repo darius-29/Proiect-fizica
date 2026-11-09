@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ro" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator</title>
+    <style>
+        /* --- 1. DEFINIREA CULORILOR (CSS Variables) --- */
+        :root {
+            /* Culori pentru Light Mode (Implicit) */
+            --bg-body: #f0f2f5;
+            --bg-panel: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #eeeeee;
+            --input-bg: #e4e6eb;
+            --highlight: #007bff;
+            --highlight-text: #ffffff;
+            --formula-bg: #eef2ff;
+            --formula-border: #d1d5db;
+            
+            /* Culori specifice graficelor (folosite și în JS) */
+            --chart-grid: #eeeeee;
+            --chart-text: #888888;
+            --engine-block: #f8f9fa;
+            --engine-stroke: #444444;
+        }
+
+        /* Culori pentru Dark Mode */
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-panel: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --border-color: #333333;
+            --input-bg: #2c2c2c;
+            --highlight: #3b82f6;
+            --highlight-text: #ffffff;
+            --formula-bg: #2a2a35;
+            --formula-border: #444444;
+
+            /* Culori specifice graficelor Dark */
+            --chart-grid: #333333;
+            --chart-text: #aaaaaa;
+            --engine-block: #2d2d2d;
+            --engine-stroke: #cccccc;
+        }
+
+        /* --- 2. STILURI GENERALE --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+
+        /* Toggle Switch pentru Dark Mode */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+        .theme-switch input { display:none; }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--highlight); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Container Principal */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+
+        canvas {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-panel); /* Transparent sau culoarea panelului */
+        }
+
+        /* Controale */
+        .controls { width: 350px; }
+        .control-group {
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            width: 100%;
+        }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; }
+        .value-display { float: right; color: var(--highlight); }
+
+        /* Butoane Mod */
+        .mode-switch { display: flex; gap: 10px; margin-bottom: 20px; }
+        .mode-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            background: var(--input-bg);
+            color: var(--text-main);
+            transition: 0.3s;
+        }
+        .mode-btn.active {
+            background: var(--highlight);
+            color: var(--highlight-text);
+        }
+
+        /* Statistici și Formule */
+        .stats {
+            margin-top: 10px;
+            text-align: center;
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .formula-display {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            font-size: 1.25em; 
+            font-weight: bold; 
+            margin: 10px 0;
+            padding: 12px;
+            background: var(--formula-bg);
+            border: 1px solid var(--formula-border);
+            border-radius: 6px;
+            color: var(--text-main);
+        }
+        .stat-value {
+            font-weight: bold;
+            color: #28a745; /* Verde universal */
+            font-size: 1.5em;
+        }
+        .phase-indicator {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #d63384;
+            height: 24px;
+            font-size: 1.1em;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--highlight);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-controls">
+        <h1>Simulator</h1>
+        
+        <div class="theme-switch-wrapper">
+            <span style="margin-right: 10px; font-weight: bold;">Dark Mode</span>
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" onclick="toggleTheme()">
+                <div class="slider"></div>
+            </label>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button id="btn-otto" class="mode-btn active" onclick="setMode('otto')">Motor OTTO</button>
+        <button id="btn-diesel" class="mode-btn" onclick="setMode('diesel')">Motor DIESEL</button>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h3>Animație Piston</h3>
+            <canvas id="engineCanvas" width="300" height="400"></canvas>
+            <div class="phase-indicator" id="phaseText">Admisie</div>
+            <small style="color: var(--text-muted); margin-top: 5px;">
+                *Viteza de rotație crește odată cu Compresia
+            </small>
+        </div>
+
+        <div class="panel">
+            <h3>Diagrama P-V</h3>
+            <canvas id="graphCanvas" width="450" height="400"></canvas>
+        </div>
+
+        <div class="panel controls">
+            <h3>Parametri</h3>
+            <div class="control-group">
+                <label>Raport Comprimare (r): <span id="val-compression" class="value-display">9</span></label>
+                <input type="range" id="compression" min="6" max="22" step="0.5" value="9">
+            </div>
+            <div class="control-group">
+                <label>Exponent Adiabatic (&gamma;): <span id="val-gamma" class="value-display">1.4</span></label>
+                <input type="range" id="gamma" min="1.2" max="1.6" step="0.05" value="1.4">
+            </div>
+            <div id="diesel-controls" class="control-group" style="display: none;">
+                <label>Raport de Injecție (&rho;): <span id="val-cutoff" class="value-display">2.0</span></label>
+                <input type="range" id="cutoff" min="1.2" max="3.0" step="0.1" value="2.0">
+            </div>
+
+            <div class="stats">
+                <div style="font-weight: 600; margin-bottom: 5px;">Formula Randamentului:</div>
+                <div id="formula-text" class="formula-display"></div>
+                Randament Termic (&eta;):<br>
+                <span id="efficiency" class="stat-value">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- VARIABILE GLOBALE ---
+        let mode = 'otto';
+        let angle = 0;
+        let params = { r: 9, gamma: 1.4, rho: 2.0 };
+        let isDark = false; // Starea temei
+
+        // Canvas elemente
+        const engCv = document.getElementById('engineCanvas');
+        const engCtx = engCv.getContext('2d');
+        const grCv = document.getElementById('graphCanvas');
+        const grCtx = grCv.getContext('2d');
+
+        // UI elemente
+        const ui = {
+            comp: document.getElementById('compression'),
+            valComp: document.getElementById('val-compression'),
+            gam: document.getElementById('gamma'),
+            valGam: document.getElementById('val-gamma'),
+            cut: document.getElementById('cutoff'),
+            valCut: document.getElementById('val-cutoff'),
+            dieselCtrl: document.getElementById('diesel-controls'),
+            eff: document.getElementById('efficiency'),
+            formula: document.getElementById('formula-text'),
+            phase: document.getElementById('phaseText'),
+            btnOtto: document.getElementById('btn-otto'),
+            btnDiesel: document.getElementById('btn-diesel')
+        };
+
+        // --- FUNCȚII DARK MODE ---
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const currentTheme = htmlEl.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            htmlEl.setAttribute('data-theme', newTheme);
+            isDark = (newTheme === 'dark');
+            
+            // Redesenăm imediat pentru a actualiza culorile din Canvas
+            drawEngine();
+            drawGraph();
+        }
+
+        // Helper pentru a lua culorile CSS actuale
+        function getVarColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        // --- EVENT LISTENERS ---
+        ui.comp.addEventListener('input', (e) => { params.r = parseFloat(e.target.value); ui.valComp.innerText = params.r; updateCalc(); });
+        ui.gam.addEventListener('input', (e) => { params.gamma = parseFloat(e.target.value); ui.valGam.innerText = params.gamma; updateCalc(); });
+        ui.cut.addEventListener('input', (e) => { params.rho = parseFloat(e.target.value); ui.valCut.innerText = params.rho; updateCalc(); });
+
+        // --- LOGICĂ SIMULATOR ---
+        function setMode(newMode) {
+            mode = newMode;
+            ui.btnOtto.classList.toggle('active', mode === 'otto');
+            ui.btnDiesel.classList.toggle('active', mode === 'diesel');
+            
+            if(mode === 'otto') { 
+                params.r = 9; ui.comp.value = 9; 
+                ui.dieselCtrl.style.display = 'none'; 
+            } else { 
+                params.r = 16; ui.comp.value = 16; 
+                ui.dieselCtrl.style.display = 'block'; 
+            }
+            ui.valComp.innerText = params.r;
+            updateCalc();
+        }
+
+        function updateCalc() {
+            let eff;
+            if (mode === 'otto') {
+                eff = 1 - (1 / Math.pow(params.r, params.gamma - 1));
+                ui.formula.innerHTML = "&eta; = 1 - (1 / r<sup>&gamma;-1</sup>)";
+            } else {
+                const t1 = 1 / Math.pow(params.r, params.gamma - 1);
+                const t2 = (Math.pow(params.rho, params.gamma) - 1) / (params.gamma * (params.rho - 1));
+                eff = 1 - t1 * t2;
+                ui.formula.innerHTML = "&eta; = 1 - (1 / r<sup>&gamma;-1</sup>) &sdot; [(&rho;<sup>&gamma;</sup> - 1) / (&gamma;(&rho; - 1))]";
+            }
+            ui.eff.innerText = (eff * 100).toFixed(1) + "%";
+        }
+
+        // --- DESENARE MOTOR ---
+        function drawEngine() {
+            engCtx.clearRect(0, 0, engCv.width, engCv.height);
+            
+            // Culori dinamice
+            const colBlock = getVarColor('--engine-block');
+            const colStroke = getVarColor('--engine-stroke');
+            const colPiston = isDark ? '#4b5563' : '#607D8B';
+            
+            const cx = engCv.width / 2;
+            const cy = 280; 
+            const rCrk = 40; 
+            const lRod = 130; 
+            const rad = (angle * Math.PI) / 180;
+
+            // Coordonate
+            const crankX = cx + rCrk * Math.sin(rad);
+            const crankY = cy - rCrk * Math.cos(rad);
+            // Formula cinematică piston
+            const pistonY = cy - (rCrk * Math.cos(rad) + Math.sqrt(lRod*lRod - Math.pow(rCrk * Math.sin(rad), 2)));
+
+            // Bloc Motor
+            engCtx.fillStyle = colBlock;
+            engCtx.fillRect(cx - 55, 40, 110, 220);
+            engCtx.strokeStyle = colStroke;
+            engCtx.lineWidth = 3;
+            engCtx.strokeRect(cx - 55, 40, 110, 220);
+
+            // Valve
+            const cycle = angle % 720;
+            // Admisie deschisă (Verde)
+            engCtx.fillStyle = (cycle < 180) ? '#4CAF50' : colStroke;
+            engCtx.fillRect(cx - 40, 35, 25, 10);
+            // Evacuare deschisă (Roșu)
+            engCtx.fillStyle = (cycle > 540) ? '#F44336' : colStroke;
+            engCtx.fillRect(cx + 15, 35, 25, 10);
+
+            // Ax Cotit (Crankshaft)
+            engCtx.beginPath();
+            engCtx.arc(cx, cy, 15, 0, Math.PI * 2);
+            engCtx.fillStyle = '#999';
+            engCtx.fill();
+            engCtx.stroke();
+
+            engCtx.beginPath();
+            engCtx.moveTo(cx, cy);
+            engCtx.lineTo(crankX, crankY);
+            engCtx.strokeStyle = isDark ? '#888' : '#555';
+            engCtx.lineWidth = 10;
+            engCtx.stroke();
+
+            // Bielă (Rod)
+            engCtx.beginPath();
+            engCtx.moveTo(cx, pistonY + 25);
+            engCtx.lineTo(crankX, crankY);
+            engCtx.strokeStyle = isDark ? '#aaa' : '#333';
+            engCtx.lineWidth = 8;
+            engCtx.lineCap = 'round';
+            engCtx.stroke();
+
+            // Piston
+            engCtx.fillStyle = colPiston;
+            engCtx.fillRect(cx - 53, pistonY, 106, 45);
+            
+            // Bolt piston
+            engCtx.beginPath();
+            engCtx.arc(cx, pistonY + 25, 5, 0, Math.PI * 2);
+            engCtx.fillStyle = '#333';
+            engCtx.fill();
+        }
+
+        // --- DESENARE GRAFIC P-V ---
+        function drawGraph() {
+            grCtx.clearRect(0, 0, grCv.width, grCv.height);
+            
+            // Culori dinamice
+            const colGrid = getVarColor('--chart-grid');
+            const colText = getVarColor('--chart-text');
+            const colAxis = getVarColor('--text-main');
+
+            const padX = 70, padY = 60;
+            const w = grCv.width - padX * 2, h = grCv.height - padY * 2;
+
+            const Vmin = 1, Vmax = params.r, P1 = 1;
+            const C_comp = P1 * Math.pow(Vmax, params.gamma);
+            const P2 = C_comp / Math.pow(Vmin, params.gamma);
+            const ottoFactor = 3.0;
+            let Pmax = (mode === 'otto') ? P2 * ottoFactor : P2 * 1.2;
+
+            const getX = (v) => padX + 15 + ((v - Vmin) / (Vmax - Vmin)) * (w - 30);
+            const getY = (p) => (grCv.height - padY - 15) - ((p - P1) / (Pmax - P1)) * (h - 30);
+
+            // Grilaj Orizontal
+            grCtx.lineWidth = 1;
+            grCtx.font = '10px Arial';
+            grCtx.textAlign = 'right';
+            const pStep = Pmax > 40 ? 10 : 5;
+            for(let p = 0; p <= Pmax; p += pStep) {
+                if (p < P1) continue;
+                let y = getY(p);
+                grCtx.strokeStyle = colGrid;
+                grCtx.beginPath(); grCtx.moveTo(padX, y); grCtx.lineTo(grCv.width - padX, y); grCtx.stroke();
+                grCtx.fillStyle = colText;
+                grCtx.fillText(p.toFixed(0), padX - 8, y + 4);
+            }
+
+            // Grilaj Vertical
+            grCtx.textAlign = 'center';
+            for(let v = 1; v <= params.r; v += 1) {
+                let x = getX(v);
+                grCtx.strokeStyle = colGrid;
+                grCtx.beginPath(); grCtx.moveTo(x, padY); grCtx.lineTo(x, grCv.height - padY); grCtx.stroke();
+                grCtx.fillStyle = colText;
+                grCtx.fillText(v.toFixed(0), x, grCv.height - padY + 12);
+            }
+
+            // Axe
+            grCtx.strokeStyle = colAxis; grCtx.lineWidth = 2;
+            grCtx.beginPath();
+            grCtx.moveTo(padX - 10, grCv.height - padY); grCtx.lineTo(grCv.width - padX + 20, grCv.height - padY);
+            grCtx.moveTo(padX, grCv.height - padY + 10); grCtx.lineTo(padX, padY - 20);
+            grCtx.stroke();
+
+            // Etichete Axe
+            grCtx.fillStyle = colAxis;
+            grCtx.font = 'bold 12px Arial';
+            grCtx.fillText("Volum V [m³]", grCv.width / 2 + 10, grCv.height - 15);
+            grCtx.save();
+            grCtx.translate(20, grCv.height / 2);
+            grCtx.rotate(-Math.PI / 2);
+            grCtx.fillText("Presiune P [Pa]", 0, 0);
+            grCtx.restore();
+
+            // Puncte Cheie
+            const p1_coord = { x: getX(Vmax), y: getY(P1) };
+            const p2_coord = { x: getX(Vmin), y: getY(P2) };
+            let p3_coord, p4_coord;
+
+            if(mode === 'otto') {
+                const P3 = P2 * ottoFactor;
+                p3_coord = { x: getX(Vmin), y: getY(P3) };
+                p4_coord = { x: getX(Vmax), y: getY(P3 * Math.pow(Vmin/Vmax, params.gamma)) };
+            } else {
+                const Vc = Vmin * params.rho;
+                p3_coord = { x: getX(Vc), y: getY(P2) };
+                p4_coord = { x: getX(Vmax), y: getY(P2 * Math.pow(Vc/Vmax, params.gamma)) };
+            }
+
+            // --- DESENARE CURBE ---
+            // 1. Compresie (Albastru)
+            grCtx.lineWidth = 3;
+            grCtx.beginPath(); grCtx.strokeStyle = '#9c27b0'; 
+            grCtx.moveTo(getX(Vmin), getY(P1)); grCtx.lineTo(p1_coord.x, p1_coord.y); grCtx.stroke();
+
+            grCtx.beginPath(); grCtx.strokeStyle = '#007bff'; 
+            for(let i=0; i<=50; i++) {
+                let v = Vmax - (i/50)*(Vmax - Vmin);
+                grCtx.lineTo(getX(v), getY(C_comp / Math.pow(v, params.gamma)));
+            }
+            grCtx.stroke();
+
+            // 2. Ardere (Portocaliu)
+            grCtx.beginPath(); grCtx.strokeStyle = '#ff9800'; 
+            grCtx.moveTo(p2_coord.x, p2_coord.y); grCtx.lineTo(p3_coord.x, p3_coord.y); grCtx.stroke();
+
+            // 3. Destindere (Verde)
+            grCtx.beginPath(); grCtx.strokeStyle = '#28a745'; 
+            const C_exp = (mode === 'otto') ? (P2*ottoFactor*Math.pow(Vmin, params.gamma)) : (P2*Math.pow(Vmin*params.rho, params.gamma));
+            const startV_exp = (mode === 'otto') ? Vmin : Vmin*params.rho;
+            for(let i=0; i<=50; i++) {
+                let v = startV_exp + (i/50)*(Vmax - startV_exp);
+                grCtx.lineTo(getX(v), getY(C_exp / Math.pow(v, params.gamma)));
+            }
+            grCtx.stroke();
+
+            // 4. Evacuare (Gri)
+            grCtx.beginPath(); grCtx.strokeStyle = '#6c757d'; 
+            grCtx.moveTo(p4_coord.x, p4_coord.y); grCtx.lineTo(p1_coord.x, p1_coord.y); grCtx.stroke();
+
+            // --- PUNCTUL ANIMAT ---
+            const cycle = angle % 720;
+            let curV, curP, phaseText;
+            const window = 20;
+
+            // Logica interpolare P-V bazată pe unghi
+            if (cycle < 180) { 
+                let t = cycle / 180;
+                curV = Vmin + t * (Vmax - Vmin); curP = P1;
+                phaseText = "1. Admisie";
+            } else if (cycle < 360 - window) {
+                let t = (cycle - 180) / (180 - window);
+                curV = Vmax - t * (Vmax - Vmin);
+                curP = C_comp / Math.pow(curV, params.gamma);
+                phaseText = "2. Compresie";
+            } else if (cycle < 360 + window) {
+                let t = (cycle - (360 - window)) / (window * 2);
+                if (mode === 'otto') {
+                    curV = Vmin; curP = P2 + t * ( (P2 * ottoFactor) - P2 );
+                    phaseText = "Ardere (V=ct)";
+                } else {
+                    const Vc = Vmin * params.rho;
+                    curV = Vmin + t * (Vc - Vmin); curP = P2;
+                    phaseText = "Ardere (P=ct)";
+                }
+            } else if (cycle < 540 - window) {
+                let t = (cycle - (360 + window)) / (180 - 2*window);
+                const Vstart = (mode === 'otto') ? Vmin : (Vmin * params.rho);
+                curV = Vstart + t * (Vmax - Vstart);
+                const currentC = (mode === 'otto') ? (P2*ottoFactor*Math.pow(Vmin, params.gamma)) : (P2*Math.pow(Vmin*params.rho, params.gamma));
+                curP = currentC / Math.pow(curV, params.gamma);
+                phaseText = "3. Destindere";
+            } else if (cycle < 540 + window) {
+                let t = (cycle - (540 - window)) / (window * 2);
+                curV = Vmax;
+                let p4_val = (mode === 'otto') ? (P2 * ottoFactor * Math.pow(Vmin/Vmax, params.gamma)) : (P2 * Math.pow((Vmin * params.rho)/Vmax, params.gamma));
+                curP = p4_val - t * (p4_val - P1);
+                phaseText = "Evacuare";
+            } else {
+                let t = (cycle - (540 + window)) / (180 - window);
+                curV = Vmax - t * (Vmax - Vmin); curP = P1;
+                phaseText = "4. Evacuare";
+            }
+
+            ui.phase.innerText = phaseText;
+            grCtx.beginPath(); grCtx.arc(getX(curV), getY(curP), 7, 0, Math.PI*2);
+            grCtx.fillStyle = 'red'; grCtx.fill();
+            grCtx.strokeStyle = isDark ? '#fff' : '#fff'; grCtx.lineWidth = 2; grCtx.stroke();
+        }
+
+        // --- ANIMATION LOOP ---
+        function loop() {
+            // VITEZA VARIABILĂ:
+            // Viteza de bază este 1.0. 
+            // Adăugăm un factor care depinde de compresie (params.r).
+            const dynamicSpeed = 1.0 + (params.r / 8); 
+            
+            angle += dynamicSpeed;
+            
+            drawEngine();
+            drawGraph();
+            requestAnimationFrame(loop);
+        }
+
+        // Initializare
+        updateCalc();
+        loop();
+
+        // Verifică tema preferată a sistemului la pornire
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            toggleTheme(); // Activează dark mode dacă sistemul e pe dark
+            document.getElementById('checkbox').checked = true;
+        }
+
+    </script>
+</body>
+</html>
