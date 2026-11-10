@@ -7,7 +7,6 @@
     <style>
         /* --- 1. DEFINIREA CULORILOR (CSS Variables) --- */
         :root {
-            /* Culori pentru Light Mode (Implicit) */
             --bg-body: #f0f2f5;
             --bg-panel: #ffffff;
             --text-main: #333333;
@@ -18,15 +17,12 @@
             --highlight-text: #ffffff;
             --formula-bg: #eef2ff;
             --formula-border: #d1d5db;
-            
-            /* Culori specifice graficelor (folosite și în JS) */
             --chart-grid: #eeeeee;
             --chart-text: #888888;
             --engine-block: #f8f9fa;
             --engine-stroke: #444444;
         }
 
-        /* Culori pentru Dark Mode */
         [data-theme="dark"] {
             --bg-body: #121212;
             --bg-panel: #1e1e1e;
@@ -38,8 +34,6 @@
             --highlight-text: #ffffff;
             --formula-bg: #2a2a35;
             --formula-border: #444444;
-
-            /* Culori specifice graficelor Dark */
             --chart-grid: #333333;
             --chart-text: #aaaaaa;
             --engine-block: #2d2d2d;
@@ -68,44 +62,23 @@
             margin-bottom: 20px;
         }
 
-        /* Toggle Switch pentru Dark Mode */
-        .theme-switch-wrapper {
-            display: flex;
-            align-items: center;
-        }
-        .theme-switch {
-            display: inline-block;
-            height: 34px;
-            position: relative;
-            width: 60px;
-        }
+        .theme-switch-wrapper { display: flex; align-items: center; }
+        .theme-switch { display: inline-block; height: 34px; position: relative; width: 60px; }
         .theme-switch input { display:none; }
         .slider {
             background-color: #ccc;
-            bottom: 0;
-            cursor: pointer;
-            left: 0;
-            position: absolute;
-            right: 0;
-            top: 0;
+            bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0;
             transition: .4s;
             border-radius: 34px;
         }
         .slider:before {
             background-color: #fff;
-            bottom: 4px;
-            content: "";
-            height: 26px;
-            left: 4px;
-            position: absolute;
-            transition: .4s;
-            width: 26px;
-            border-radius: 50%;
+            bottom: 4px; content: ""; height: 26px; left: 4px; position: absolute;
+            transition: .4s; width: 26px; border-radius: 50%;
         }
         input:checked + .slider { background-color: var(--highlight); }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Container Principal */
         .container {
             display: flex;
             flex-wrap: wrap;
@@ -129,10 +102,9 @@
         canvas {
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            background: var(--bg-panel); /* Transparent sau culoarea panelului */
+            background: var(--bg-panel);
         }
 
-        /* Controale */
         .controls { width: 350px; }
         .control-group {
             margin-bottom: 15px;
@@ -143,7 +115,6 @@
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; }
         .value-display { float: right; color: var(--highlight); }
 
-        /* Butoane Mod */
         .mode-switch { display: flex; gap: 10px; margin-bottom: 20px; }
         .mode-btn {
             padding: 10px 20px;
@@ -160,7 +131,25 @@
             color: var(--highlight-text);
         }
 
-        /* Statistici și Formule */
+        /* --- Redare: pauză, faze, bară de timp --- */
+        .playback {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .phase-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .phase-btn { padding: 8px 14px; font-size: 0.85em; }
+        .timeline { flex: 1 1 100%; max-width: 700px; }
+        .playback label.auto-pause {
+            display: flex; align-items: center; gap: 6px; margin: 0;
+            font-weight: 500; cursor: pointer;
+        }
+
         .stats {
             margin-top: 10px;
             text-align: center;
@@ -173,8 +162,8 @@
         .formula-display {
             font-family: "Times New Roman", Times, serif;
             font-style: italic;
-            font-size: 1.25em; 
-            font-weight: bold; 
+            font-size: 1.25em;
+            font-weight: bold;
             margin: 10px 0;
             padding: 12px;
             background: var(--formula-bg);
@@ -182,11 +171,7 @@
             border-radius: 6px;
             color: var(--text-main);
         }
-        .stat-value {
-            font-weight: bold;
-            color: #28a745; /* Verde universal */
-            font-size: 1.5em;
-        }
+        .stat-value { font-weight: bold; color: #28a745; font-size: 1.5em; }
         .phase-indicator {
             margin-top: 10px;
             font-weight: bold;
@@ -194,18 +179,34 @@
             height: 24px;
             font-size: 1.1em;
         }
-        
-        input[type=range] {
-            width: 100%;
-            accent-color: var(--highlight);
+
+        /* Buton discret de încetinire (colț dreapta-jos) */
+        .slow-btn {
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-size: 1em;
+            cursor: pointer;
+            opacity: 0.18;
+            transition: opacity 0.3s, background 0.3s;
         }
+        .slow-btn:hover, .slow-btn:focus-visible { opacity: 1; }
+        .slow-btn.on { opacity: 0.7; background: var(--highlight); }
+
+        input[type=range] { width: 100%; accent-color: var(--highlight); }
     </style>
 </head>
 <body>
 
     <div class="header-controls">
         <h1>Simulator</h1>
-        
+
         <div class="theme-switch-wrapper">
             <span style="margin-right: 10px; font-weight: bold;">Dark Mode</span>
             <label class="theme-switch" for="checkbox">
@@ -218,6 +219,13 @@
     <div class="mode-switch">
         <button id="btn-otto" class="mode-btn active" onclick="setMode('otto')">Motor OTTO</button>
         <button id="btn-diesel" class="mode-btn" onclick="setMode('diesel')">Motor DIESEL</button>
+    </div>
+
+    <div class="playback">
+        <button id="playBtn" class="mode-btn" onclick="setPlaying(!playing)">⏸ Pauză</button>
+        <div id="phase-buttons" class="phase-buttons"></div>
+        <input type="range" id="timeline" class="timeline" min="0" max="719" step="1" value="0" aria-label="Poziția în ciclu (grade)">
+        <label class="auto-pause"><input type="checkbox" id="autoPause"> Pauză automată la începutul fiecărei faze</label>
     </div>
 
     <div class="container">
@@ -259,12 +267,27 @@
         </div>
     </div>
 
+    <button id="slowBtn" class="slow-btn" onclick="toggleSlow()" title="Încetinit (tasta S)" aria-label="Încetinește animația">🐢</button>
+
     <script>
         // --- VARIABILE GLOBALE ---
         let mode = 'otto';
         let angle = 0;
         let params = { r: 9, gamma: 1.4, rho: 2.0 };
-        let isDark = false; // Starea temei
+        let isDark = false;
+        let playing = true;
+        let slowMode = false;
+        const SLOW_FACTOR = 0.3; // 0.3 = viteza redusă la 30%
+
+        // Fazele ciclului (unghiul de început, în grade, din 720)
+        const PHASES = [
+            { name: 'Admisie', start: 0 },
+            { name: 'Compresie', start: 180 },
+            { name: 'Ardere', start: 340 },
+            { name: 'Destindere', start: 380 },
+            { name: 'Cedare căldură', start: 520 },
+            { name: 'Evacuare', start: 560 }
+        ];
 
         // Canvas elemente
         const engCv = document.getElementById('engineCanvas');
@@ -285,24 +308,67 @@
             formula: document.getElementById('formula-text'),
             phase: document.getElementById('phaseText'),
             btnOtto: document.getElementById('btn-otto'),
-            btnDiesel: document.getElementById('btn-diesel')
+            btnDiesel: document.getElementById('btn-diesel'),
+            playBtn: document.getElementById('playBtn'),
+            timeline: document.getElementById('timeline'),
+            autoPause: document.getElementById('autoPause')
         };
+
+        // --- CONTROL REDARE (PAUZĂ / FAZE) ---
+        function setPlaying(value) {
+            playing = value;
+            ui.playBtn.textContent = playing ? '⏸ Pauză' : '▶ Continuă';
+        }
+
+        function toggleSlow() {
+            slowMode = !slowMode;
+            document.getElementById('slowBtn').classList.toggle('on', slowMode);
+        }
+
+        // Butoane de salt pe fază: sar la începutul fazei și pun pauză
+        const phaseBtns = PHASES.map((p) => {
+            const b = document.createElement('button');
+            b.className = 'mode-btn phase-btn';
+            b.textContent = p.name;
+            b.onclick = () => { angle = p.start; setPlaying(false); };
+            document.getElementById('phase-buttons').appendChild(b);
+            return b;
+        });
+
+        // Bara de timp: tragi manual și animația se oprește
+        ui.timeline.addEventListener('input', (e) => {
+            angle = parseFloat(e.target.value);
+            setPlaying(false);
+        });
+
+        // Tastatură: Spațiu = pauză/continuă, ←/→ = pas de 5°
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (e.target && e.target.blur) e.target.blur();
+                setPlaying(!playing);
+            } else if ((e.code === 'ArrowRight' || e.code === 'ArrowLeft') && e.target.type !== 'range') {
+                angle = (angle + (e.code === 'ArrowRight' ? 5 : -5) + 720) % 720;
+                setPlaying(false);
+            } else if (e.code === 'KeyS' && !e.ctrlKey && !e.metaKey) {
+                toggleSlow();
+            }
+        });
+        document.addEventListener('keyup', (e) => { if (e.code === 'Space') e.preventDefault(); });
 
         // --- FUNCȚII DARK MODE ---
         function toggleTheme() {
             const htmlEl = document.documentElement;
             const currentTheme = htmlEl.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
+
             htmlEl.setAttribute('data-theme', newTheme);
             isDark = (newTheme === 'dark');
-            
-            // Redesenăm imediat pentru a actualiza culorile din Canvas
+
             drawEngine();
             drawGraph();
         }
 
-        // Helper pentru a lua culorile CSS actuale
         function getVarColor(name) {
             return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         }
@@ -317,13 +383,13 @@
             mode = newMode;
             ui.btnOtto.classList.toggle('active', mode === 'otto');
             ui.btnDiesel.classList.toggle('active', mode === 'diesel');
-            
-            if(mode === 'otto') { 
-                params.r = 9; ui.comp.value = 9; 
-                ui.dieselCtrl.style.display = 'none'; 
-            } else { 
-                params.r = 16; ui.comp.value = 16; 
-                ui.dieselCtrl.style.display = 'block'; 
+
+            if(mode === 'otto') {
+                params.r = 9; ui.comp.value = 9;
+                ui.dieselCtrl.style.display = 'none';
+            } else {
+                params.r = 16; ui.comp.value = 16;
+                ui.dieselCtrl.style.display = 'block';
             }
             ui.valComp.innerText = params.r;
             updateCalc();
@@ -346,22 +412,19 @@
         // --- DESENARE MOTOR ---
         function drawEngine() {
             engCtx.clearRect(0, 0, engCv.width, engCv.height);
-            
-            // Culori dinamice
+
             const colBlock = getVarColor('--engine-block');
             const colStroke = getVarColor('--engine-stroke');
             const colPiston = isDark ? '#4b5563' : '#607D8B';
-            
+
             const cx = engCv.width / 2;
-            const cy = 280; 
-            const rCrk = 40; 
-            const lRod = 130; 
+            const cy = 280;
+            const rCrk = 40;
+            const lRod = 130;
             const rad = (angle * Math.PI) / 180;
 
-            // Coordonate
             const crankX = cx + rCrk * Math.sin(rad);
             const crankY = cy - rCrk * Math.cos(rad);
-            // Formula cinematică piston
             const pistonY = cy - (rCrk * Math.cos(rad) + Math.sqrt(lRod*lRod - Math.pow(rCrk * Math.sin(rad), 2)));
 
             // Bloc Motor
@@ -373,14 +436,12 @@
 
             // Valve
             const cycle = angle % 720;
-            // Admisie deschisă (Verde)
             engCtx.fillStyle = (cycle < 180) ? '#4CAF50' : colStroke;
             engCtx.fillRect(cx - 40, 35, 25, 10);
-            // Evacuare deschisă (Roșu)
             engCtx.fillStyle = (cycle > 540) ? '#F44336' : colStroke;
             engCtx.fillRect(cx + 15, 35, 25, 10);
 
-            // Ax Cotit (Crankshaft)
+            // Ax Cotit
             engCtx.beginPath();
             engCtx.arc(cx, cy, 15, 0, Math.PI * 2);
             engCtx.fillStyle = '#999';
@@ -394,7 +455,7 @@
             engCtx.lineWidth = 10;
             engCtx.stroke();
 
-            // Bielă (Rod)
+            // Bielă
             engCtx.beginPath();
             engCtx.moveTo(cx, pistonY + 25);
             engCtx.lineTo(crankX, crankY);
@@ -406,7 +467,7 @@
             // Piston
             engCtx.fillStyle = colPiston;
             engCtx.fillRect(cx - 53, pistonY, 106, 45);
-            
+
             // Bolt piston
             engCtx.beginPath();
             engCtx.arc(cx, pistonY + 25, 5, 0, Math.PI * 2);
@@ -417,8 +478,7 @@
         // --- DESENARE GRAFIC P-V ---
         function drawGraph() {
             grCtx.clearRect(0, 0, grCv.width, grCv.height);
-            
-            // Culori dinamice
+
             const colGrid = getVarColor('--chart-grid');
             const colText = getVarColor('--chart-text');
             const colAxis = getVarColor('--text-main');
@@ -492,24 +552,24 @@
             }
 
             // --- DESENARE CURBE ---
-            // 1. Compresie (Albastru)
+            // 1. Compresie
             grCtx.lineWidth = 3;
-            grCtx.beginPath(); grCtx.strokeStyle = '#9c27b0'; 
+            grCtx.beginPath(); grCtx.strokeStyle = '#9c27b0';
             grCtx.moveTo(getX(Vmin), getY(P1)); grCtx.lineTo(p1_coord.x, p1_coord.y); grCtx.stroke();
 
-            grCtx.beginPath(); grCtx.strokeStyle = '#007bff'; 
+            grCtx.beginPath(); grCtx.strokeStyle = '#007bff';
             for(let i=0; i<=50; i++) {
                 let v = Vmax - (i/50)*(Vmax - Vmin);
                 grCtx.lineTo(getX(v), getY(C_comp / Math.pow(v, params.gamma)));
             }
             grCtx.stroke();
 
-            // 2. Ardere (Portocaliu)
-            grCtx.beginPath(); grCtx.strokeStyle = '#ff9800'; 
+            // 2. Ardere
+            grCtx.beginPath(); grCtx.strokeStyle = '#ff9800';
             grCtx.moveTo(p2_coord.x, p2_coord.y); grCtx.lineTo(p3_coord.x, p3_coord.y); grCtx.stroke();
 
-            // 3. Destindere (Verde)
-            grCtx.beginPath(); grCtx.strokeStyle = '#28a745'; 
+            // 3. Destindere
+            grCtx.beginPath(); grCtx.strokeStyle = '#28a745';
             const C_exp = (mode === 'otto') ? (P2*ottoFactor*Math.pow(Vmin, params.gamma)) : (P2*Math.pow(Vmin*params.rho, params.gamma));
             const startV_exp = (mode === 'otto') ? Vmin : Vmin*params.rho;
             for(let i=0; i<=50; i++) {
@@ -518,8 +578,8 @@
             }
             grCtx.stroke();
 
-            // 4. Evacuare (Gri)
-            grCtx.beginPath(); grCtx.strokeStyle = '#6c757d'; 
+            // 4. Evacuare
+            grCtx.beginPath(); grCtx.strokeStyle = '#6c757d';
             grCtx.moveTo(p4_coord.x, p4_coord.y); grCtx.lineTo(p1_coord.x, p1_coord.y); grCtx.stroke();
 
             // --- PUNCTUL ANIMAT ---
@@ -527,8 +587,7 @@
             let curV, curP, phaseText;
             const window = 20;
 
-            // Logica interpolare P-V bazată pe unghi
-            if (cycle < 180) { 
+            if (cycle < 180) {
                 let t = cycle / 180;
                 curV = Vmin + t * (Vmax - Vmin); curP = P1;
                 phaseText = "1. Admisie";
@@ -559,7 +618,7 @@
                 curV = Vmax;
                 let p4_val = (mode === 'otto') ? (P2 * ottoFactor * Math.pow(Vmin/Vmax, params.gamma)) : (P2 * Math.pow((Vmin * params.rho)/Vmax, params.gamma));
                 curP = p4_val - t * (p4_val - P1);
-                phaseText = "Evacuare";
+                phaseText = "Cedare de căldură (V=ct)";
             } else {
                 let t = (cycle - (540 + window)) / (180 - window);
                 curV = Vmax - t * (Vmax - Vmin); curP = P1;
@@ -569,18 +628,34 @@
             ui.phase.innerText = phaseText;
             grCtx.beginPath(); grCtx.arc(getX(curV), getY(curP), 7, 0, Math.PI*2);
             grCtx.fillStyle = 'red'; grCtx.fill();
-            grCtx.strokeStyle = isDark ? '#fff' : '#fff'; grCtx.lineWidth = 2; grCtx.stroke();
+            grCtx.strokeStyle = '#fff'; grCtx.lineWidth = 2; grCtx.stroke();
         }
 
         // --- ANIMATION LOOP ---
         function loop() {
-            // VITEZA VARIABILĂ:
-            // Viteza de bază este 1.0. 
-            // Adăugăm un factor care depinde de compresie (params.r).
-            const dynamicSpeed = 1.0 + (params.r / 8); 
-            
-            angle += dynamicSpeed;
-            
+            if (playing) {
+                const prev = angle;
+                const next = prev + (1.0 + params.r / 8) * (slowMode ? SLOW_FACTOR : 1);
+
+                // Pauză automată: oprește exact la începutul unei faze (0 se numără ca 720)
+                let stopAt;
+                if (ui.autoPause.checked) {
+                    stopAt = PHASES.map(p => p.start || 720).find(b => prev < b && next >= b);
+                }
+                if (stopAt !== undefined) {
+                    angle = stopAt % 720;
+                    setPlaying(false);
+                } else {
+                    angle = next % 720;
+                }
+            }
+
+            // Sincronizează bara de timp și butonul fazei curente
+            ui.timeline.value = Math.round(angle) % 720;
+            let idx = 0;
+            PHASES.forEach((p, i) => { if (angle >= p.start) idx = i; });
+            phaseBtns.forEach((b, i) => b.classList.toggle('active', i === idx));
+
             drawEngine();
             drawGraph();
             requestAnimationFrame(loop);
@@ -590,9 +665,8 @@
         updateCalc();
         loop();
 
-        // Verifică tema preferată a sistemului la pornire
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            toggleTheme(); // Activează dark mode dacă sistemul e pe dark
+            toggleTheme();
             document.getElementById('checkbox').checked = true;
         }
 
